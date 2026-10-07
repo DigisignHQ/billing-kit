@@ -1,0 +1,52 @@
+name: Billing Kit checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run format:check
+      - run: npm pack --dry-run
+  databases:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: billing_test
+          POSTGRES_PASSWORD: billing_test
+          POSTGRES_DB: billing_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U billing_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping:1})'"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:integration
+        env:
+          BILLING_KIT_TEST_POSTGRES_URL: postgresql://billing_test:billing_test@127.0.0.1:5432/billing_test
+          BILLING_KIT_TEST_MONGODB_URL: mongodb://127.0.0.1:27017

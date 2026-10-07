@@ -1,0 +1,136 @@
+{
+  "name": "@digisign/billing-kit",
+  "version": "0.2.0",
+  "description": "Provider-adaptable recurring billing, subscriptions, invoices and entitlements.",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "files": [
+    "dist",
+    "dist-cjs",
+    "README.md",
+    "docs"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/server.d.ts",
+        "default": "./dist/server.js"
+      },
+      "require": {
+        "types": "./dist-cjs/server.d.ts",
+        "default": "./dist-cjs/server.js"
+      }
+    },
+    "./server": {
+      "import": {
+        "types": "./dist/server.d.ts",
+        "default": "./dist/server.js"
+      },
+      "require": {
+        "types": "./dist-cjs/server.d.ts",
+        "default": "./dist-cjs/server.js"
+      }
+    },
+    "./client": {
+      "import": {
+        "types": "./dist/client.d.ts",
+        "default": "./dist/client.js"
+      },
+      "require": {
+        "types": "./dist-cjs/client.d.ts",
+        "default": "./dist-cjs/client.js"
+      }
+    },
+    "./adapters/memory": {
+      "import": {
+        "types": "./dist/adapters/memory.d.ts",
+        "default": "./dist/adapters/memory.js"
+      },
+      "require": {
+        "types": "./dist-cjs/adapters/memory.d.ts",
+        "default": "./dist-cjs/adapters/memory.js"
+      }
+    },
+    "./adapters/postgres": {
+      "import": {
+        "types": "./dist/adapters/postgres.d.ts",
+        "default": "./dist/adapters/postgres.js"
+      },
+      "require": {
+        "types": "./dist-cjs/adapters/postgres.d.ts",
+        "default": "./dist-cjs/adapters/postgres.js"
+      }
+    },
+    "./adapters/mongodb": {
+      "import": {
+        "types": "./dist/adapters/mongodb.d.ts",
+        "default": "./dist/adapters/mongodb.js"
+      },
+      "require": {
+        "types": "./dist-cjs/adapters/mongodb.d.ts",
+        "default": "./dist-cjs/adapters/mongodb.js"
+      }
+    },
+    "./portal": {
+      "import": {
+        "types": "./dist/portal.d.ts",
+        "default": "./dist/portal.js"
+      },
+      "require": {
+        "types": "./dist-cjs/portal.d.ts",
+        "default": "./dist-cjs/portal.js"
+      }
+    },
+    "./adapters/sandbox": {
+      "import": {
+        "types": "./dist/adapters/sandbox.d.ts",
+        "default": "./dist/adapters/sandbox.js"
+      },
+      "require": {
+        "types": "./dist-cjs/adapters/sandbox.d.ts",
+        "default": "./dist-cjs/adapters/sandbox.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.cjs.json && node scripts/finish-build.mjs",
+    "test": "tsx --test test/*.test.ts",
+    "test:integration": "tsx --test test/integration/*.test.ts",
+    "demo": "tsx examples/demo.ts",
+    "check": "npm run typecheck && npm run build && npm test && node scripts/test-package.mjs",
+    "format": "prettier --write src test examples scripts/*.mjs package.json tsconfig*.json",
+    "format:check": "prettier --check src test examples scripts/*.mjs package.json tsconfig*.json",
+    "test:local-databases": "bash scripts/test-local-databases.sh",
+    "prepack": "npm run build",
+    "demo:portal": "npm run build && tsx examples/portal-server.ts",
+    "typecheck": "tsc -p tsconfig.check.json",
+    "test:package": "npm run build && node scripts/test-package.mjs"
+  },
+  "peerDependencies": {
+    "mongodb": "^6.18.0",
+    "pg": "^8.13.0"
+  },
+  "peerDependenciesMeta": {
+    "mongodb": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
+    "jsdom": "^29.1.1",
+    "mongodb": "^6.18.0",
+    "pg": "^8.13.0",
+    "prettier": "^3.9.9",
+    "tsx": "^4.19.0",
+    "typescript": "~5.8.3"
+  }
+}
