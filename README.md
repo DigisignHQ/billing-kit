@@ -74,6 +74,114 @@ The client does not render UI or require a DOM container. A prebuilt billing por
 
 The amounts and periods above are examples. Each application configures its own plans and policies.
 
+## Integration example
+
+The following snippets show the application workflow. `db`, `walletProvider`, `notifications` and `yourAuth` are integrations supplied by your application; they are not built-in services. Package imports refer to the built Billing Kit package, which is not yet published to npm.
+
+### Configure your backend
+
+```ts
+import { createBilling, createBillingHandler } from '@digisign/billing-kit/server';
+import { mongoStorage } from '@digisign/billing-kit/adapters/mongodb';
+
+const billing = createBilling({
+  namespace: 'yourapp-production',
+  storage: mongoStorage(db),
+  providers: [walletProvider],
+  prices: [{
+    id: 'starter_monthly',
+    kind: 'base',
+    planId: 'starter',
+    name: 'Starter',
+    amount: 500000, // NGN 5,000 in kobo
+    currency: 'NGN',
+    interval: { unit: 'month', count: 1 },
+    features: { offline_signing: true, team_members: 5 },
+  }],
+  graceDays: 5,
+  retryDays: 1,
+  reminderDays: [10, 3, 1],
+});
+```
+
+For PostgreSQL, use `postgresStorage(pool)` from `@digisign/billing-kit/adapters/postgres` and call `await storage.migrate()` before using the engine. Use dedicated billing storage per environment. See the [provider adapter guide](docs/providers.md) to connect your wallet or payment provider.
+
+### Create a subscription during onboarding
+
+```ts
+await billing.subscriptions.create({
+  id: 'organisation_subscription',
+  customerId: 'organisation_id',
+  priceId: 'starter_monthly',
+  trialDays: 14,
+});
+```
+
+### Run billing from your scheduled task
+
+```ts
+await billing.runScheduledSweep(async event => {
+  // Your delivery service must deduplicate using event.id.
+  await notifications.deliver(event);
+});
+```
+
+Register this call with Trigger.dev or your scheduler. The sweep processes reminders, due collections and retries; your event handler delivers notifications. See the [scheduler integration](docs/trigger.md).
+
+### Authorize frontend requests in your backend
+
+```ts
+const handler = createBillingHandler({
+  billing,
+  authorize: async ({ request, subscriptionId, action }) => {
+    const identity = await yourAuth.authenticate(request);
+    // Verify ownership, action permissions and CSRF for cookie-based writes.
+    const allowed = await yourAuth.canManageBilling(identity, subscriptionId, action);
+    return { allowed, actor: identity?.id };
+  },
+});
+```
+
+Mount this Fetch-compatible handler at `/api/billing` through your backend framework. Your application implements the authentication and permission checks.
+
+### Call the client from your own frontend components
+
+```ts
+import { createBillingClient } from '@digisign/billing-kit/client';
+
+const client = createBillingClient({
+  baseUrl: '/api/billing',
+  // Supply your application's CSRF header for cookie-authenticated writes.
+  // headers: () => ({ 'x-csrf-token': yourCsrfToken }),
+});
+
+const subscription = await client.getSubscription('organisation_subscription');
+const invoices = await client.getHistory('organisation_subscription');
+
+// Call from your own Retry payment button's event handler.
+async function retryPayment() {
+  return client.retryPayment('organisation_subscription');
+}
+```
+
+Render this data in your React, Vue, Svelte or other components. Handle loading and errors, and use the returned subscription state to show the payment outcome. No DOM selector or prebuilt portal is required.
+
+### Enforce plan features in your backend
+
+```ts
+const { allowed } = await billing.entitlements.check({
+  subscriptionId: 'organisation_subscription',
+  feature: 'offline_signing',
+});
+
+if (!allowed) {
+  throw new Error('Your subscription does not allow offline signing');
+}
+// Continue with the authorized signing operation.
+```
+
+For a runnable sandbox workflow, see [the billing example](examples/demo.ts). After cloning the repository, run `npm ci` followed by `npm run demo` to observe trial expiry, a failed wallet payment, top-up and recovery without moving real money.
+
 ## Integration guides
 
 - [Provider adapters and payment confirmation](docs/providers.md)
