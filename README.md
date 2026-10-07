@@ -58,7 +58,9 @@ Applications can also record metered usage, sell prepaid units and apply account
 
 ### 8. Show billing history
 
-Connect your frontend to the backend through the typed client or optional billing portal. Customers can view their subscription, invoices, payment status and charge descriptions. Administrative actions require authorization in your backend.
+Use the typed browser client from your own React, Vue, Svelte or other application components. Your screens call your backend to load subscriptions, display billing history and request billing actions. The backend authenticates each request, checks subscription ownership and authorizes the action.
+
+The client does not render UI or require a DOM container. A prebuilt billing portal is available as an optional integration for applications that want it; installing or using the client does not mount that portal. See the [client integration workflow](docs/http.md) for examples.
 
 ## Example: monthly wallet billing
 
@@ -77,7 +79,7 @@ The amounts and periods above are examples. Each application configures its own 
 - [Provider adapters and payment confirmation](docs/providers.md)
 - [Scheduled billing and email delivery](docs/trigger.md)
 - [Billing API and business policies](docs/api.md)
-- [Frontend client and billing portal](docs/http.md)
+- [Typed frontend client and optional portal](docs/http.md)
 - [Storage architecture and operational limits](docs/architecture.md)
 - [DigiSign integration workflow](docs/digisign-integration.md)
 

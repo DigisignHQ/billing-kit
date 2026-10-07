@@ -8,7 +8,8 @@
 - `providers.ts`: provider capability checks and signed application-webhook helpers.
 - `notifications.ts`: email templates and stale-notification suppression; the host supplies its sender.
 - `http.ts`: Fetch-compatible routes with mandatory authorization.
-- `client.ts` and `portal.ts`: browser-safe transport and a framework-neutral UI.
+- `client.ts`: the primary browser integration, a typed HTTP client for application-owned UI.
+- `portal.ts`: an optional prebuilt UI using that client; importing the client does not mount a portal.
 - `adapters/`: PostgreSQL, MongoDB, test memory storage and simulated providers.
 
 The host application owns customer identity, authorization, catalog eligibility, provider credentials, scheduler registration, actual money movement and notification transport. The package remains independent of NestJS and DigiSign-specific schemas.
